@@ -84,6 +84,11 @@ export default class MdcSupportPlugin extends Plugin {
 		const container = document.createElement("div");
 		container.className = "mdc-embed";
 
+		// Add all props as data attributes
+		Object.entries(props).forEach(([key, value]) => {
+			container.setAttribute(`data-${key}`, String(value).replace(/"/g, ''));
+		});
+
 		// Add title if present
 		if (props.title) {
 			const titleEl = document.createElement("div");

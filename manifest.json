@@ -4,6 +4,6 @@
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Adds support for MDC-style ::str blocks with frontmatter",
-	"author": "Mika",
+	"author": "Mikaleb",
 	"isDesktopOnly": false
 }
