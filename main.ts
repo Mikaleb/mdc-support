@@ -3,23 +3,55 @@ import { Plugin } from "obsidian";
 export default class MdcSupportPlugin extends Plugin {
 	async onload() {
 		this.registerMarkdownPostProcessor((el, ctx) => {
-			const text = el.innerText;
-			if (text.includes("::")) {
-				this.processMdcBlocks(el);
-			}
+			const paragraphs = el.querySelectorAll('p');
+			paragraphs.forEach(p => {
+				const text = p.textContent || '';
+				if (text.startsWith('::') && text.includes('::')) {
+					this.processMdcBlock(p);
+				}
+			});
 		});
 	}
 
-	private processMdcBlocks(el: HTMLElement) {
-		const text = el.innerHTML;
-		const regex = /::(\w+)<br>([\s\S]*?)<br>::/g;
-		const newHtml = text.replace(regex, (match, tag, content) => {
-			return this.createMdcElement(tag, content.replace(/<br>/g, '\n')).outerHTML;
-		});
+	private processMdcBlock(p: HTMLElement) {
+		const fullText = this.getFullBlockText(p);
+		const match = fullText.match(/^::(\w+)\s*\n([\s\S]*?)\n::$/m);
 		
-		if (newHtml !== text) {
-			el.innerHTML = newHtml;
+		if (match) {
+			const [, tag, content] = match;
+			const mdcEl = this.createMdcElement(tag, content);
+			this.replaceBlockElements(p, mdcEl, fullText);
 		}
+	}
+
+	private getFullBlockText(startEl: HTMLElement): string {
+		let text = '';
+		let current: Element | null = startEl;
+		
+		while (current) {
+			text += (current.textContent || '') + '\n';
+			if (current.textContent?.includes('::') && current !== startEl) break;
+			current = current.nextElementSibling;
+		}
+		
+		return text.trim();
+	}
+
+	private replaceBlockElements(startEl: HTMLElement, replacement: HTMLElement, blockText: string) {
+		const lines = blockText.split('\n');
+		let current: Element | null = startEl;
+		const toRemove: Element[] = [];
+		let lineCount = 0;
+		
+		while (current && lineCount < lines.length) {
+			toRemove.push(current);
+			lineCount++;
+			if (current.textContent?.includes('::') && current !== startEl) break;
+			current = current.nextElementSibling;
+		}
+		
+		startEl.parentNode?.insertBefore(replacement, startEl);
+		toRemove.forEach(el => el.remove());
 	}
 
 	private createMdcElement(tag: string, source: string): HTMLElement {
@@ -51,6 +83,14 @@ export default class MdcSupportPlugin extends Plugin {
 		// Create container
 		const container = document.createElement("div");
 		container.className = "mdc-embed";
+
+		// Add title if present
+		if (props.title) {
+			const titleEl = document.createElement("div");
+			titleEl.className = "mdc-embed-title";
+			titleEl.textContent = props.title.replace(/"/g, '');
+			container.appendChild(titleEl);
+		}
 
 		// Render content as markdown
 		if (content) {

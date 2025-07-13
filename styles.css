@@ -1,11 +1,17 @@
 .mdc-embed {
   border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
-  padding: 12px;
-  margin: 8px 0;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 12px 0;
   background: var(--background-secondary);
 }
 
+.mdc-embed-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-accent);
+}
+
 .mdc-embed-content {
-  line-height: 1.5;
+  line-height: 1.6;
 }
